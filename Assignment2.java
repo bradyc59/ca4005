@@ -114,6 +114,12 @@ public class Assignment2 {
             if(gcd(eulers, exponent).equals(BigInteger.ONE)){
                 isRelativePrime = true;
             }
+            else{
+                p = PrimeGenerator();
+                q = PrimeGenerator();
+
+                n = ProductPrimes(p, q);
+            }
         }
 
         // BigInteger multiInverseResult = multiplicativeInverse(exponent, eulers);
