@@ -3,6 +3,11 @@ import java.math.BigInteger;
 import java.security.*;
 import java.security.SecureRandom;
 
+
+// Conor Brady
+// 19448162
+
+
 public class Assignment2 {
 
     public static BigInteger PrimeGenerator() {
@@ -13,11 +18,11 @@ public class Assignment2 {
         return prime;
     }
 
-    public static BigInteger ProductPrimes(BigInteger p, BigInteger q){
+    public static BigInteger ProductPrimes(BigInteger p, BigInteger q) {
         return p.multiply(q);
     }
 
-    public static BigInteger EulersToitent(BigInteger p, BigInteger q){
+    public static BigInteger EulersToitent(BigInteger p, BigInteger q) {
         BigInteger pMinusOne = p.subtract(BigInteger.ONE);
         BigInteger qMinusOne = q.subtract(BigInteger.ONE);
 
@@ -27,8 +32,7 @@ public class Assignment2 {
 
     }
 
-    public static BigInteger gcd(BigInteger eu, BigInteger ex)
-    {
+    public static BigInteger gcd(BigInteger eu, BigInteger ex) {
         BigInteger z = BigInteger.ONE;
         if (eu == BigInteger.ZERO) {
             z = BigInteger.ZERO;
@@ -40,10 +44,10 @@ public class Assignment2 {
         return GCD;
     }
 
-    public static BigInteger multiplicativeInverse(BigInteger ex, BigInteger eu){
+    public static BigInteger multiplicativeInverse(BigInteger ex, BigInteger eu) {
         BigInteger gcdResult = gcd(eu, ex);
         BigInteger result = BigInteger.ZERO;
-        if(gcdResult.equals(BigInteger.ONE)){
+        if (gcdResult.equals(BigInteger.ONE)) {
             result = gcdResult.mod(eu).add(eu).mod(eu);
 
         }
@@ -51,6 +55,7 @@ public class Assignment2 {
 
     }
 
+    //Taken from assignment1
     private static byte[] readFile(String filename) {
         File fileIn = new File(filename);
         byte[] fileBytes = new byte[(int) fileIn.length()];
@@ -68,29 +73,22 @@ public class Assignment2 {
         return fileBytes;
     }
 
-    public static BigInteger decrypt(BigInteger message, BigInteger p, BigInteger q){
-        BigInteger qMultiInverseP = multiplicativeInverse(q, p);
-
-        return chineseRemainderTheorem(message, qMultiInverseP, p, q);
-    }
-
-    public static BigInteger chineseRemainderTheorem(BigInteger message, BigInteger inverse, BigInteger p, BigInteger q){
+    public static BigInteger chineseRemainderTheorem(BigInteger message, BigInteger inverse, BigInteger p,
+            BigInteger q) {
         BigInteger primeP = modPower(message, inverse.mod(p.subtract(BigInteger.ONE)), p);
         BigInteger primeQ = modPower(message, inverse.mod(q.subtract(BigInteger.ONE)), q);
 
-        BigInteger qInv = gcd(q,p);
-
-        return primeQ.add(q.multiply((qInv.multiply(primeP.subtract(primeQ))).mod(p)));
+        return primeQ.add(q.multiply((inverse.multiply(primeP.subtract(primeQ))).mod(p)));
     }
 
+    // Taken from assignment1 and changed due to the ineffiency in assignment1
     public static BigInteger modPower(BigInteger base, BigInteger exponent, BigInteger modulus) {
         BigInteger result = BigInteger.ONE;
-        base = base.mod(modulus);
-        for (int i = 0; i < exponent.bitLength(); ++i) {
+        for (int i = exponent.bitLength(); i >= 0; i--) {
             if (exponent.testBit(i)) {
                 result = result.multiply(base).mod(modulus);
             }
-            base = base.multiply(base).mod(modulus);
+            result = result.multiply(base).mod(modulus);
         }
         return result;
     }
@@ -107,22 +105,20 @@ public class Assignment2 {
 
         boolean isRelativePrime = false;
 
-        
         BigInteger exponent = new BigInteger("65537");
-        
-        while(!isRelativePrime){
-            if(gcd(eulers, exponent).equals(BigInteger.ONE)){
+
+        while (!isRelativePrime) {
+            if (gcd(eulers, exponent).equals(BigInteger.ONE)) {
                 isRelativePrime = true;
-            }
-            else{
+            } else {
                 p = PrimeGenerator();
                 q = PrimeGenerator();
 
-                n = ProductPrimes(p, q);
+                eulers = EulersToitent(p, q);
             }
         }
 
-        // BigInteger multiInverseResult = multiplicativeInverse(exponent, eulers);
+        BigInteger multiInverseResult = multiplicativeInverse(exponent, eulers);
 
         MessageDigest sha256 = null;
         try {
@@ -142,7 +138,7 @@ public class Assignment2 {
         byte[] byteMessage = sha256.digest(readFile(filename));
         BigInteger FileAsBigInteger = new BigInteger(1, byteMessage);
 
-        BigInteger signedMessage = decrypt(FileAsBigInteger, p, q);
+        BigInteger signedMessage = chineseRemainderTheorem(FileAsBigInteger, multiInverseResult, p, q);
         String signedMessageAsString = signedMessage.toString(16);
 
         System.out.println(signedMessageAsString);
